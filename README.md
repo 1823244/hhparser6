@@ -1,4 +1,4 @@
-# hhparser5
+# hhparser
 hh.ru vacancies parser
 
 ## Анализатор вакансий на hh.ru  
