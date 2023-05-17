@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" data-bs-theme="dark">
+<head>
+    <div th:include="~{fragments/head::commonHead}"></div>
+    <title th:text="${pageTitle}">Page title</title>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container">
+    <p>Today is: <span th:text="${today}">13 February 2011</span></p>
+</div>
+
+<!--  TITLE    -->
+<div class="container">
+    <h4><span>Project: </span> <a th:href="@{/projects/{id}(id=${projectDto.getId()})}"><span th:text="${projectDto.getName()}"></span></a> </h4>
+    <h5><span>Search text: </span> <span th:text="${stextDto.text}"></span></a> </h5>
+</div>
+
+<!--  STATISTICS    -->
+<div class="container">
+    Total vacancies: <span th:text="${total_vacs}">1879</span>  Total pages: <span th:text="${total_pages}">127</span>  <br>
+    Over 500.000: <span th:text="${over500}">1879</span><br>
+    Over 400.000: <span th:text="${over400}">1879</span><br>
+    Over 350.000: <span th:text="${over350}">1879</span><br>
+    Over 300.000: <span th:text="${over300}">1879</span><br>
+    Over 250.000: <span th:text="${over250}">1879</span><br>
+    Over 200.000: <span th:text="${over200}">1879</span><br>
+    Hidden salary: <span th:text="${hiddensalary}">1879</span><br>
+
+</div>
+<!--  NAVIGATION   (PAGES)    -->
+<div class="container">
+    <a class="btn btn-secondary" href="prev" th:href="@{/searchtexts/openvacs/{sid}/project/{id}(id=${project_id},sid=${stext_id})} + '?page=' + (${pageNumber}-1)">prev&nbsp;</a>
+    <a class="btn btn-primary" href="curr" th:href="@{/searchtexts/openvacs/{sid}/project/{id}(id=${project_id},sid=${stext_id})} + '?page=1'" th:text="${pageNumberText}">current page is 12</a>
+    <a class="btn btn-secondary" href="next" th:href="@{/searchtexts/openvacs/{sid}/project/{id}(id=${project_id},sid=${stext_id})} + '?page=' + (${pageNumber}+1)">&nbsp;next</a>
+</div>
+<!--  TABLE -->
+<div class="container">
+    <table class="table table-bordered">
+    <tr>
+        <th>#</th>
+        <th>NAME</th>
+        <th>SALARY</th>
+        <th>EMPLOYER</th>
+        <th>ACTION</th>
+    </tr>
+
+    <tr th:each="item : ${itemsList}">
+        <td th:text="${item.getCount()}">999</td>
+        <td>
+            <a href="" th:href="@{/vacancies/{hhid}(hhid=${item.getHhid()})}" th:text="${item.getName()}">java developer</a>
+        </td>
+        <td th:text="${item.getSalary_netto()}">300 000</td>
+        <td>
+            <a href="" th:href="${item.getEmployer_link()}" th:text="${item.getEmployer()}">Sber</a>
+        </td>
+        <td>
+            <input type="submit" value="To blacklist" onclick="sendToBlacklist();"/>
+        </td>
+    </tr>
+
+</table>
+</div>
+<!--  NAVIGATION   (PAGES)    -->
+<div class="container">
+    <a class="btn btn-secondary" href="prev" th:href="@{/searchtexts/openvacs/{sid}/project/{id}(id=${project_id},sid=${stext_id})} + '?page=' + (${pageNumber}-1)">prev&nbsp;</a>
+    <a class="btn btn-primary" href="curr" th:href="@{/searchtexts/openvacs/{sid}/project/{id}(id=${project_id},sid=${stext_id})} + '?page=1'" th:text="${pageNumberText}">current page is 12</a>
+    <a class="btn btn-secondary" href="next" th:href="@{/searchtexts/openvacs/{sid}/project/{id}(id=${project_id},sid=${stext_id})} + '?page=' + (${pageNumber}+1)">&nbsp;next</a>
+</div>
+
+<div class="container">
+    <div th:replace="~{fragments/footer :: copyright}"></div>
+</div>
+
+
+</body>
+</html>

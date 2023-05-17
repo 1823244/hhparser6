@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" data-bs-theme="dark">
+<head>
+    <div th:include="~{fragments/head::commonHead}"></div>
+    <title th:text="${pageTitle}">Page title</title>
+</head>
+<body>
+<!--<div th:replace="~{fragments/navbar :: navbar}"></div>-->
+<div class="container">
+    <h5> hh parser </h5>
+</div>
+
+
+<div class="container">
+    <p>Приложение - агрегатор вакансий с hh.ru</p>
+    <p>Позволяет вести статистику вакансий в разрезе "Проектов" и "Строк поиска"</p>
+    <p>"Проект" - это сущность, которая объединяет несколько "Строк поиска",</p>
+    <p>чтобы охватить все вакансии в каком-то направлении.</p>
+    <p>Например, проект Java может включать такие строки поиска:</p>
+    <p>java developer</p>
+    <p>java architect</p>
+    <p>java teamlead</p>
+</div>
+
+<div class="container">
+    <p></p><a th:href="@{/login}">Login</a></p>
+    <p>or</p>
+    <p><a th:href="@{/registration}">Register</a></p>
+</div>
+
+<div class="container">
+    <div th:replace="~{fragments/footer :: copyright}"></div>
+</div>
+
+<div class="container">
+    <p>Today is: <span th:text="${today}">13 February 2011</span></p>
+</div>
+
+</body>
+</html>
