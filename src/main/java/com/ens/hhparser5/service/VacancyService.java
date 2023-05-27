@@ -45,6 +45,8 @@ public class VacancyService {
     private ObjectMapper jacksonMapper;
     @Autowired
     private EmployerRepo employerRepo;
+    @Autowired
+    private RegionService regionService;
 
     public void processOneVacancy(final VacancySource vacancySource,
                                    final long project_id,
@@ -74,53 +76,57 @@ public class VacancyService {
 
 
     private Vacancy getVacancyFromJson(VacancySource vacancySource) throws JsonProcessingException {
-        JsonNode jsonNode = jacksonMapper.readTree(vacancySource.getJson());
+        JsonNode rootNode = jacksonMapper.readTree(vacancySource.getJson());
 
-        final String hhid = jsonNode.get("id").asText();
+        final String hhid = rootNode.get("id").asText();
         logger.info("id: {}, name: {}, employer: {}, compensation to: {} {}"
                 , hhid
-                , jsonNode.get("name").asText()
-                , jsonNode.get("employer").get("name")
-                , jsonNode.get("salary").get("to")
+                , rootNode.get("name").asText()
+                , rootNode.get("employer").get("name")
+                , rootNode.get("salary").get("to")
                 , "."//oneItem.get("salary").get("gross").asBoolean() ? "gross" : "net"
         );
 
         int salary_from = 0;
         int salary_to = 0;
         boolean gross = false;
-        if (!(jsonNode.get("salary") == null) && !jsonNode.get("salary").isNull()){
-            JsonNode s_from = jsonNode.get("salary").get("from");
+        if (!(rootNode.get("salary") == null) && !rootNode.get("salary").isNull()){
+            JsonNode s_from = rootNode.get("salary").get("from");
             if (!(s_from == null) && !s_from.isNull()) {
                 salary_from = s_from.asInt();
             }
-            JsonNode s_to = jsonNode.get("salary").get("to");
+            JsonNode s_to = rootNode.get("salary").get("to");
             if (!(s_to ==null) && !s_to.isNull()) {
                 salary_to = s_to.asInt();
             }
-            JsonNode s_g = jsonNode.get("salary").get("gross");
+            JsonNode s_g = rootNode.get("salary").get("gross");
             if (!(s_g == null) && !s_g.isNull()) {
                 gross = s_g.asBoolean();
             }
         }
         String employer_hhid = "";
-        JsonNode emp = jsonNode.get("employer");
+        JsonNode emp = rootNode.get("employer");
         if (!(emp == null) && (!emp.isNull())) {
             if (!(emp.get("id") == null) && !(emp.get("id").isNull())){
                 employer_hhid = emp.get("id").asText();
             }
         }
 
+        JsonNode area = rootNode.get("area");
+        int areaId = area.get("id").asInt();
+
         Vacancy vac = new Vacancy();
 
-        vac.setHhid(jsonNode.get("id").asText());
-        vac.setArchived(jsonNode.get("archived").asBoolean());
+        vac.setHhid(rootNode.get("id").asText());
+        vac.setArchived(rootNode.get("archived").asBoolean());
         vac.setEmployer(employerRepo.findByHhid(employer_hhid).getId());
-        vac.setName(jsonNode.get("name").asText());
+        vac.setName(rootNode.get("name").asText());
         vac.setGross(gross ? 1 : 0);
-        vac.setAlternate_url(jsonNode.get("alternate_url").asText());
-        vac.setUrl(jsonNode.get("url").asText());
+        vac.setAlternate_url(rootNode.get("alternate_url").asText());
+        vac.setUrl(rootNode.get("url").asText());
         vac.setSalary_from(salary_from);
         vac.setSalary_to(salary_to);
+        vac.setRegion(areaId);
 
         return vac;
     }
@@ -141,6 +147,7 @@ public class VacancyService {
                     e.NAME AS employer_name,
                     e.hhid AS employer_hhid,
                     v.alternate_url as alternate_url,
+                    r.name as region,
                     subq.date_published as date_published
                  FROM
                     (SELECT
@@ -168,6 +175,9 @@ public class VacancyService {
                     LEFT OUTER JOIN
                         employer AS e
                             ON e.id = v.employer_id
+                    LEFT OUTER JOIN
+                        regions AS r
+                            ON r.id = v.region
                  WHERE
                     (h.date_closed IS NULL)
                     OR (h.date_closed > ? ) --3 @date_published
@@ -213,6 +223,7 @@ public class VacancyService {
                 v.setEmployer_hhid(rs.getString("employer_hhid"));
                 v.setEmployer_link("https://hh.ru/employer/"+rs.getString("employer_hhid"));
                 v.setStartDate(rs.getDate("date_published"));
+                v.setRegionName(rs.getString("region"));
                 v.setCount(count++);
 
                 vacs.add(v);
@@ -343,6 +354,7 @@ public class VacancyService {
                 	CTEORDERED.employer_name AS employer_name,
                 	CTEORDERED.employer_hhid AS employer_hhid,
                 	CTEORDERED.alternate_url as alternate_url,
+                	CTEORDERED.region as region,
                 	CTEORDERED.date_published as date_published
                 FROM
                 	(SELECT
@@ -357,6 +369,7 @@ public class VacancyService {
                 			CTE.employer_name AS employer_name,
                 			CTE.employer_hhid AS employer_hhid,
                 			CTE.alternate_url as alternate_url,
+                			CTE.region as region,
                 			CTE.date_published as date_published
                 		FROM
                 			(SELECT
@@ -371,6 +384,7 @@ public class VacancyService {
                 				e.NAME AS employer_name,
                 				e.hhid AS employer_hhid,
                 				v.alternate_url as alternate_url,
+                				r.name as region,
                 				subq.date_published as date_published
                 			FROM
                 				(SELECT
@@ -396,7 +410,8 @@ public class VacancyService {
                 					vacancy AS v ON v.id = h.vacancy_id
                 				LEFT OUTER JOIN
                 					employer AS e ON e.id = v.employer_id
-                				--2023-03-05 blacklist
+                				LEFT OUTER JOIN
+                					regions AS r ON r.id = v.region
                 				LEFT JOIN
                 					blacklist as bl
                 						ON bl.vacancy_id = h.vacancy_id
@@ -407,7 +422,7 @@ public class VacancyService {
                 				AND
                 				bl.id IS NULL --не показываем вакансии, которые есть в блэклисте
                 			) as CTE
-                	) AS CTEORDERED 
+                	) AS CTEORDERED
                 WHERE
                 	CTEORDERED.RowNum > ?
                 	AND CTEORDERED.RowNum <= ?                  
@@ -416,20 +431,18 @@ public class VacancyService {
     }
 
     /**
-     * Возвращает Map со всеми вакансиями по проекту для отчета openvacancies.html
-     * Пока (2023-01-18) пагинация работает только на Postgres
-     * Для MSSQL нужно менять использование хранимой функции на запрос
+     * Реализация пагинации при просмотре открытых вакансий
+     * Возвращает Map с вакансиями на указанной "странице" для view "openvacancies.html"
+     *
      * @param projectId
      * @param pageNumber
      * @return
      */
     public Map<String,Object> findAllOpenByProjectIdPagination(long projectId, int pageNumber){
         Map<String,Object> resMap = new HashMap<>();
-        List<OpenVacancy> vacs = new ArrayList<>();
+        List<OpenVacancy> vacanciesList = new ArrayList<>();
         String queryText = vacsQueryTextPostgresPagination();
-        try (//Connection conn = DataSourceUtils.getConnection(ds);
-             PreparedStatement stmt = connection.prepareStatement( queryText )
-        ){
+        try (PreparedStatement stmt = connection.prepareStatement( queryText )){
             stmt.setDate(1, java.sql.Date.valueOf(LocalDate.now(ClockHolder.getClock())));
             stmt.setLong(2, projectId);
             stmt.setDate(3, java.sql.Date.valueOf(LocalDate.now(ClockHolder.getClock())));
@@ -450,43 +463,46 @@ public class VacancyService {
                 v.setEmployer_link("https://hh.ru/employer/"+rs.getString("employer_hhid"));
                 v.setCount(rs.getInt("RowNum"));
                 v.setStartDate(rs.getDate("date_published"));
-                vacs.add(v);
+                v.setRegionName(rs.getString("region"));
+                vacanciesList.add(v);
 
             }
             rs.close();
-            resMap.put("vacs", vacs);
-
-            List<OpenVacancy> allVacs = findAllOpenByProjectId(projectId, null);
-
-            // дальше соберем статистику по количеству вакансий в нескольких разрезах оплат
-            resMap.put("total", allVacs.size());
-
-            resMap.put("over500", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 500000)
-                    .collect(Collectors.toList()).size());
-
-            resMap.put("over400", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 400000)
-                    .collect(Collectors.toList()).size());
-
-            resMap.put("over350", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 350000)
-                    .collect(Collectors.toList()).size());
-
-            resMap.put("over300", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 300000)
-                    .collect(Collectors.toList()).size());
-
-            resMap.put("over250", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 250000)
-                    .collect(Collectors.toList()).size());
-
-            resMap.put("over200", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 200000)
-                    .collect(Collectors.toList()).size());
-
-            resMap.put("hiddensalary", allVacs.stream().filter((vac)-> vac.getSalary_netto() == 0)
-                    .collect(Collectors.toList()).size());
-
-            return resMap;
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+
+        resMap.put("vacs", vacanciesList);
+
+        //todo Нужен рефакторинг. Возможно стоит вызывать это из контроллера
+        List<OpenVacancy> allVacs = findAllOpenByProjectId(projectId, null);
+
+        // дальше соберем статистику по количеству вакансий в нескольких разрезах оплат
+        resMap.put("total", allVacs.size());
+
+        resMap.put("over500", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 500000)
+                .collect(Collectors.toList()).size());
+
+        resMap.put("over400", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 400000)
+                .collect(Collectors.toList()).size());
+
+        resMap.put("over350", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 350000)
+                .collect(Collectors.toList()).size());
+
+        resMap.put("over300", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 300000)
+                .collect(Collectors.toList()).size());
+
+        resMap.put("over250", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 250000)
+                .collect(Collectors.toList()).size());
+
+        resMap.put("over200", allVacs.stream().filter((vac)-> vac.getSalary_netto() >= 200000)
+                .collect(Collectors.toList()).size());
+
+        resMap.put("hiddensalary", allVacs.stream().filter((vac)-> vac.getSalary_netto() == 0)
+                .collect(Collectors.toList()).size());
+
+        return resMap;
+
     }
 
     // Запрос, выбирающий открытые вакансии на определенную дату + pagination
@@ -674,10 +690,7 @@ public class VacancyService {
 
     public List<OpenVacancy> findNewVacanciesForToday(Project project, java.sql.Date reportDate) {
         List<OpenVacancy> vacs = new ArrayList<>();
-        try (
-                //Connection conn = DataSourceUtils.getConnection(ds);
-                PreparedStatement stmt = connection.prepareStatement( vacsQueryTextPostgresNewVacsForToday() )
-        ){
+        try (PreparedStatement stmt = connection.prepareStatement( vacsQueryTextPostgresNewVacsForToday() )        ){
             java.sql.Date reportDateValue;
             if (reportDate == null) {
                 reportDateValue = java.sql.Date.valueOf(LocalDate.now(ClockHolder.getClock()));
@@ -701,6 +714,7 @@ public class VacancyService {
                 v.setSalary_netto(rs.getInt("salary_netto"));
                 v.setEmployer_hhid(rs.getString("employer_hhid"));
                 v.setEmployer_link("https://hh.ru/employer/"+rs.getString("employer_hhid"));
+                v.setRegionName(rs.getString("region"));
                 v.setCount(count++);
 
                 vacs.add(v);
@@ -731,6 +745,7 @@ public class VacancyService {
                   v.NAME AS vacancy_name,
                   e.NAME AS employer_name,
                   e.hhid AS employer_hhid,
+                  r.name AS region,
                   v.alternate_url as alternate_url
                    FROM
                      (
@@ -753,6 +768,8 @@ public class VacancyService {
                         ON v.id = h.vacancy_id
                      LEFT OUTER JOIN employer AS e 
                         ON e.id = v.employer_id
+                     LEFT OUTER JOIN regions AS r 
+                        ON r.id = v.region
                 WHERE
                 	(h.date_closed IS NULL)
                 	OR (h.date_closed > ? ) --3 @date_published
@@ -765,11 +782,10 @@ public class VacancyService {
 
     public List<OpenVacancy> findClosedVacanciesForToday(Project project, java.sql.Date reportDate) {
         List<OpenVacancy> vacs = new ArrayList<>();
-        try //(Connection conn = DataSourceUtils.getConnection(ds))
+        try
         {
             Statement dropTable = connection.createStatement();
             dropTable.executeUpdate("DROP TABLE IF EXISTS max_date;");
-            dropTable.close();
             // выберем максимальную дату публикации вакансий по указанному проекту
             // и будем считать, что это - "сегодня"
             PreparedStatement createTable = connection.prepareStatement("""
@@ -814,6 +830,7 @@ public class VacancyService {
                 v.setEmployer_hhid(rs.getString("employer_hhid"));
                 v.setEmployer_link("https://hh.ru/employer/"+rs.getString("employer_hhid"));
                 v.setStartDate(rs.getDate("date_published"));
+                v.setRegionName(rs.getString("region"));
                 v.setCount(count++);
 
                 vacs.add(v);
@@ -822,6 +839,9 @@ public class VacancyService {
             rs.close();
             stmt.close();
             createTable.close();
+            dropTable.executeUpdate("DROP TABLE IF EXISTS max_date;");
+            dropTable.close();
+
             return vacs;
 
         } catch (SQLException e) {
@@ -849,6 +869,7 @@ public class VacancyService {
                   e.NAME AS employer_name,
                   e.hhid AS employer_hhid,
                   v.alternate_url as alternate_url,
+                  r.name as region,
                   h.date_published as date_published
                    FROM
                      publication_history AS h
@@ -859,6 +880,8 @@ public class VacancyService {
                         ON v.id = h.vacancy_id
                      LEFT OUTER JOIN employer AS e
                         ON e.id = v.employer_id
+                     LEFT OUTER JOIN regions AS r
+                        ON r.id = v.region
                 ORDER BY
                     salary_netto DESC,
                     employer_name

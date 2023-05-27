@@ -3,7 +3,9 @@ package com.ens.hhparser5.repository;
 import com.ens.hhparser5.model.Project;
 import com.ens.hhparser5.model.SearchText;
 import com.ens.hhparser5.configuration.SQLConfig;
+import com.ens.hhparser5.utility.RowMapperSearchText;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +20,8 @@ public class SearchTextRepoImpl implements SearchTextRepo{
     private SQLConfig sqlConfig;
     @Autowired
     private DataSource ds;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Override
     public SearchText save(SearchText searchText, Project project) {
@@ -41,41 +45,33 @@ public class SearchTextRepoImpl implements SearchTextRepo{
 
     }
 
+    /**
+     * #learningjava_jdbctemplate_query1
+     * Получение списка объектов через Spring JdbcTemplate
+     * Запрос с одним параметром
+     * @param project
+     * @return
+     */
     @Override
     public List<SearchText> findAllByProject(Project project) {
         String queryText = """ 
-                    SELECT 
-                       t.id as id, 
-                       t.name as text, 
-                       project.id as project_id 
-                    FROM 
-                       project_search_text as t 
+                    SELECT
+                       t.id as id,
+                       t.name as text,
+                       project.id as project_id
+                    FROM
+                       project_search_text as t
                        left join project 
                        on project.id = t.project_id
                     WHERE
                         t.project_id = ?
                     """;
 
-        List<SearchText> stexts = new ArrayList<>();
-        try (
-                Connection conn = DataSourceUtils.getConnection(ds);
-                PreparedStatement stmt = conn.prepareStatement( queryText)
-        ) {
-            stmt.setLong(1, project.getId());
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()){
-                SearchText searchText = new SearchText();
-                searchText.setText(rs.getString("text"));
-                searchText.setProjectId(rs.getLong("project_id"));
-                searchText.setId(rs.getLong("id"));
-                stexts.add(searchText);
-            }
-            rs.close();
-            return stexts;
+        List<SearchText> result = jdbcTemplate.query(queryText,
+                new RowMapperSearchText(),
+                new Object[]{project.getId()});
+        return result;
 
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
@@ -94,10 +90,10 @@ public class SearchTextRepoImpl implements SearchTextRepo{
     }
 
     public SearchText findByName(long projectId, String searchText){
-        try (
-                Connection conn = DataSourceUtils.getConnection(ds);
-                PreparedStatement stmt = conn.prepareStatement( "SELECT * FROM project_search_text WHERE project_id = ? and name = ?")
-            ) {
+        try  {
+            Connection conn = DataSourceUtils.getConnection(ds);
+            PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT * FROM project_search_text WHERE project_id = ? and name = ?");
             stmt.setLong(1, projectId);
             stmt.setString(2, searchText);
             ResultSet rs = stmt.executeQuery();
@@ -112,6 +108,8 @@ public class SearchTextRepoImpl implements SearchTextRepo{
                 break;
             }
             rs.close();
+            stmt.close();
+            DataSourceUtils.releaseConnection(conn, ds);
             return result;
 
         } catch (Exception e) {

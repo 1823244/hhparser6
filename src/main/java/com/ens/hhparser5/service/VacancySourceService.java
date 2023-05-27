@@ -50,4 +50,9 @@ public class VacancySourceService {
         result.put("alternate_url",jsonNode.get("alternate_url").textValue());
         return result;
     }
+
+    public String getVacancySourceJson(String hhid){
+        VacancySource vacancySource = vacancySourceRepo.findByHhid(hhid);
+        return vacancySource.getJson();
+    }
 }

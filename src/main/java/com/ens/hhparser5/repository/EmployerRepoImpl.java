@@ -2,8 +2,14 @@ package com.ens.hhparser5.repository;
 
 import com.ens.hhparser5.configuration.SQLConfig;
 import com.ens.hhparser5.model.Employer;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.provider.HibernateUtils;
 import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.orm.hibernate5.HibernateTransactionManager;
+import org.springframework.orm.hibernate5.SessionFactoryUtils;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -23,6 +29,7 @@ public class EmployerRepoImpl implements EmployerRepo {
 
     @Override
     public Employer save(Employer employer) {
+
         // поиск ведем по hhid, т.к. в переданном объекте не заполнен наш id.
         // Он заполняется в этом методе.
         Employer foundEmp = this.findByHhid(employer.getHhid());
@@ -139,5 +146,19 @@ public class EmployerRepoImpl implements EmployerRepo {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void delete(Employer employer) {
+        try(PreparedStatement stmt =  connection
+                .prepareStatement("DELETE FROM employer WHERE id = ?")) {
+
+            stmt.setLong(1, employer.getId());
+            stmt.executeUpdate();
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

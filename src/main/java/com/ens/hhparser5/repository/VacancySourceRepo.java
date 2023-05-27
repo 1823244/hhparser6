@@ -6,4 +6,5 @@ public interface VacancySourceRepo {
     void save(VacancySource vacancySource);
     VacancySource findByHhid(String hhid);
 
+
 }

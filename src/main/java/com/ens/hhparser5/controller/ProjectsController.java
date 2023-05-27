@@ -48,6 +48,14 @@ public class ProjectsController {
     @Autowired
     private UserService userService;
 
+    @ModelAttribute("navbarItems")
+    private List<NavbarItem> navbarItems(){
+        return navbar.getItems();
+    }
+    @ModelAttribute("today")
+    private Date getTime(){
+        return Calendar.getInstance().getTime();
+    }
 
     /**
      * Show the page with list of projects
@@ -59,8 +67,8 @@ public class ProjectsController {
                                      //@AuthenticationPrincipal User user
                                      Principal principal
                                      ){
-        model.addAttribute("navbarItems", navbar.getItems());
-        model.addAttribute("today", Calendar.getInstance().getTime());
+        //model.addAttribute("navbarItems", navbar.getItems());
+        //model.addAttribute("today", Calendar.getInstance().getTime());
         model.addAttribute("pageTitle", "Project's list");
 
         User user = userService.getPrincipalUser(principal);
@@ -109,7 +117,7 @@ public class ProjectsController {
     @GetMapping("{id}")
     private String showProject(Model model, @PathVariable long id, Principal principal){
 
-        model.addAttribute("today", Calendar.getInstance().getTime());
+        //model.addAttribute("today", Calendar.getInstance().getTime());
         model.addAttribute("currentDate",java.sql.Date.valueOf(LocalDate.now()));
 
         Project project = projectService.findById(id);
@@ -291,15 +299,17 @@ public class ProjectsController {
      * @return
      */
     @GetMapping("new")
-    public String getFormForNewProject(Model model){
-        model.addAttribute("project", new ProjectDto());
+    public String getFormForNewProject(Model model,
+                                       @ModelAttribute("project") ProjectDto projectDto){
+        //model.addAttribute("project", new ProjectDto());
         model.addAttribute("pageTitle", "Create new project");
         return "project-new";
     }
 
     /**
      * Handler of the page where we create a new project (see @GetMapping("new))
-     * @param project
+     * @param projectDto
+     * @param principal
      * @return
      */
     @PostMapping
@@ -338,7 +348,6 @@ public class ProjectsController {
     /**
      * Handler of EDIT-page (see @GetMapping("{id}/edit"))
      * @param project
-     * @param id
      * @return
      */
     @PatchMapping("/{id}")
@@ -349,7 +358,7 @@ public class ProjectsController {
 
     /**
      * Delete the project - handler of the project's details page (see @GetMapping("{id}"))
-     * @param id
+     * @param project
      * @return
      */
     @DeleteMapping("{id}")
@@ -401,5 +410,6 @@ public class ProjectsController {
         //return "project-create-success";
         return "redirect:/projects";
     }
+
 
 }

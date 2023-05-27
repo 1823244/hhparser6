@@ -18,7 +18,6 @@ import java.util.List;
 @Controller
 @RequestMapping("blacklist")
 public class BlackListController {
-
     @Autowired
     private Navbar navbar;
     @Autowired
@@ -29,9 +28,7 @@ public class BlackListController {
     @PostMapping("add/{id}")
     public String addToBlackList(Model model,
                                  @PathVariable("id") long vacancyId){
-
         blService.addToBlackList(vacancyId);
-
         return "redirect:/vacancies/"+vacancyService.findById(vacancyId).getHhid();
     }
 
@@ -40,10 +37,8 @@ public class BlackListController {
         model.addAttribute("navbarItems", navbar.getItems());
         model.addAttribute("today", Calendar.getInstance().getTime());
         model.addAttribute("pageTitle", "Black list");
-
         List<OpenVacancy> fullList = blService.findAll();
         model.addAttribute("itemsList", fullList);
-
         return "blacklist";
     }
 

@@ -1,9 +1,6 @@
 package com.ens.hhparser5.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
@@ -19,4 +16,17 @@ public class Project {
         this.name = name;
     }
 
+    public Project(String name){
+        this.id = id;
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Project{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", userId=" + userId +
+                '}';
+    }
 }

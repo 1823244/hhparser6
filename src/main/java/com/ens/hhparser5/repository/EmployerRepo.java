@@ -10,4 +10,5 @@ public interface EmployerRepo {
     List<Employer> findAll();
     Employer findById(long id);
 
+    void delete(Employer employer);
 }

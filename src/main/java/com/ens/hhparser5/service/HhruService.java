@@ -56,6 +56,8 @@ public class HhruService {
                 allVacanciesByProject.put((String) entry.getKey(), vacDto);
             }
         }
+
+
         return allVacanciesByProject;
     }
 
@@ -111,7 +113,7 @@ public class HhruService {
         List<VacancySource> vacancies = new ArrayList<>();
 
         //get pages count
-        String url = String.format("https://api.hh.ru/vacancies?area=1&search_field=name&text=%s&per_page=%d&page=%d"
+        String url = String.format("https://api.hh.ru/vacancies?area=113&search_field=name&text=%s&per_page=%d&page=%d"
                 ,searchString,appConfig.getVacanciesPerPage(),0);
 
         //HttpResponse<String> response = httpRequestService.executeRequestAndGetResponse(url);
@@ -144,8 +146,8 @@ public class HhruService {
         logger.info("alternate url: {}", jsonNode.get("alternate_url").asText(""));
 
         for (int page_number=0; page_number<pagesCount; page_number++){
-            //String url2 = "https://api.hh.ru/vacancies?area=1&search_field=name"+"&text="+searchString+"&per_page="+per_page+"&page="+page_number;
-            String url2 = String.format("https://api.hh.ru/vacancies?area=1&search_field=name&text=%s&per_page=%d&page=%d"
+            //String url2 = "https://api.hh.ru/vacancies?area=113&search_field=name"+"&text="+searchString+"&per_page="+per_page+"&page="+page_number;
+            String url2 = String.format("https://api.hh.ru/vacancies?area=113&search_field=name&text=%s&per_page=%d&page=%d"
                     ,searchString,appConfig.getVacanciesPerPage(),page_number);
 
             if (page_number > 0) {

@@ -20,6 +20,7 @@ public class Vacancy {
     public String url;
     public String alternate_url;
     public boolean archived;
+    public int region;//area in terms of hh.ru
 
     public Vacancy(long id) {
         this.id = id;
@@ -28,4 +29,5 @@ public class Vacancy {
     public boolean getArchived() {
         return this.archived;
     }
+
 }

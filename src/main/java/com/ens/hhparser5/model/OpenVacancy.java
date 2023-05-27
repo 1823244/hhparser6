@@ -20,4 +20,5 @@ public class OpenVacancy {
     public String employer_link;
     public int count;//это счетчик строк для вывода на html страницу, шаблон openvacancies.html
     public Date startDate;//дата открытия вакансии
+    public String regionName;
 }

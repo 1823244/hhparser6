@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Service
 public class ProjectService {
@@ -54,6 +55,52 @@ public class ProjectService {
         //for (ProjectDto project: projects){
         //    processOneProject(project.getName(), currentDate);
         //}
+
+        //#learningjava_streams_allmatch
+        boolean allNamesAreNotEmpty = projects.stream().allMatch((p)->!p.getName().equals(""));
+        if (!allNamesAreNotEmpty) {
+            logger.error("java.util.Stream::allMatch: At least one project has NO name!");
+        } else {
+            logger.info("java.util.Stream::allMatch: All the project have a name");
+        }
+
+        //#learningjava_streams_anymatch
+        boolean anyNameIsNotEmpty = projects.stream().anyMatch((p)->!p.getName().equals(""));
+        if (!anyNameIsNotEmpty) {
+            logger.error("java.util.Stream::anyMatch: All the project have NO name!");
+        } else {
+            logger.info("java.util.Stream::anyMatch: At least on project has a name");
+        }
+
+        //#learningjava_streams_builder
+        Stream.Builder<Project> projectBuilder = java.util.stream.Stream.builder();
+        List<Project> projectList = projectRepo.findAll(user);
+        for (Project project: projectList){//здесь специально без стрима
+            projectBuilder.add(project);
+        }
+        Stream<Project> buildedProjectStream1 = projectBuilder.build();
+        System.out.println("buildedProjectStream1:");
+        buildedProjectStream1.forEach(System.out::println);
+
+        // Почему-то IDEA заставляет указать тип Stream<Object> при таком создании стрима
+        Stream<Object> buildedProjectStream2 = Stream.builder()
+                .add(new Project("test1"))
+                .add(new Project("test2"))
+                .build();
+        System.out.println("buildedProjectStream2:");
+        buildedProjectStream2.forEach(System.out::println);
+
+        Stream.Builder<Project> projectBuilder3 = java.util.stream.Stream.builder();
+        List<Project> projectList3 = projectRepo.findAll(user);
+        for (Project project: projectList3){//здесь специально без стрима
+            projectBuilder3.accept(project);
+        }
+        Stream<Project> buildedProjectStream3 = projectBuilder3.build();
+        System.out.println("buildedProjectStream3:");
+        buildedProjectStream3.forEach(System.out::println);
+
+
+        //#learningjava_streams_foreach
         projects.stream().forEach(
                 p -> {
                     try {

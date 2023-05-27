@@ -76,6 +76,12 @@ public class ProjectRestController {
         thread.start();
         return st+"\nsearch finished at "+ LocalDateTime.now().toString();
     }
+    @PostMapping("searchone")
+    public void searchOneAjax(Principal principal, @RequestBody String json){
+        User user = userService.getPrincipalUser(principal);
 
+        System.out.println(json);
+
+    }
 
 }

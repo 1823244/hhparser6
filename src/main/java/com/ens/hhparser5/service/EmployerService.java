@@ -25,6 +25,10 @@ public class EmployerService {
         return employerRepo.findById(id);
     }
 
+    public Employer findByHhid(String hhid){
+        return employerRepo.findByHhid(hhid);
+    }
+
     public List<Employer> findAll() {
         return employerRepo.findAll();
     }
@@ -72,5 +76,9 @@ public class EmployerService {
             employerRepo.save(employer);
         }
 
+    }
+
+    public void delete(Employer employer) {
+        employerRepo.delete(employer);
     }
 }

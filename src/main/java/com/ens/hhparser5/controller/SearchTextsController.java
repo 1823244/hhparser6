@@ -99,12 +99,12 @@ public class SearchTextsController {
     /**
      * Удалить строку поиска
      * @param projectId
-     * @param sid
+     * @param stId
      * @return
      */
     @DeleteMapping("{sid}/project/{id}")
-    public String delete(@PathVariable("id") long projectId, @PathVariable("sid") long sid){
-        searchTextService.delete(sid, projectId);
+    public String delete(@PathVariable("id") long projectId, @PathVariable("sid") long stId){
+        searchTextService.delete(stId, projectId);
         return "redirect:/projects/"+projectId;
     }
 
