@@ -1,0 +1,38 @@
+version: '3'
+ 
+services:
+  postgresql:
+    container_name: postgresql
+    image: postgres:15.3-alpine3.18
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d/
+    networks:
+      - app-network    
+
+  app:
+    container_name: hhparser6
+    build:
+      context: ./hhparser6
+      dockerfile: Dockerfile
+    environment:
+      - "DB_HOST=postgresql"
+      - "POSTGRES_USER=${POSTGRES_USER}"
+      - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"
+      - "SERVER_PORT=9090"
+    expose:
+      - "9090"
+    depends_on:
+      - postgresql
+    restart: always
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
