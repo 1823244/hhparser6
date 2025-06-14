@@ -130,8 +130,8 @@
 
 
 	<build>
-		<directory>target-hhparser5</directory>
-		<finalName>hhparser5</finalName>
+		<directory>target-hhparser</directory>
+		<finalName>hhparser</finalName>
 
 		<plugins>
 			<plugin>
@@ -172,41 +172,12 @@
 	</build>
 
 	<profiles>
-		<profile>
-			<id>dev-baryatino-pg</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<build>
-				<directory>target-baryatino</directory>
-			</build>
-			<properties>
-				<profileActive>dev-baryatino-pg</profileActive>
-			</properties>
-		</profile>
-
-		<profile>
-			<id>ruvds</id>
-			<build>
-				<directory>target-ruvds</directory>
-			</build>
-			<properties>
-				<profileActive>ruvds</profileActive>
-			</properties>
-		</profile>
-
-		<profile>
-			<id>1gb</id>
-			<build>
-				<directory>target-1gb</directory>
-			</build>
-			<properties>
-				<profileActive>1gb</profileActive>
-			</properties>
-		</profile>
 
 		<profile>
 			<id>xps</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
 			<build>
 				<directory>target-xps</directory>
 			</build>

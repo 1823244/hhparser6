@@ -1,0 +1,1 @@
+mvnw -Dmaven.test.skip=true -Pxps clean package
