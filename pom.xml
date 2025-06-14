@@ -197,12 +197,12 @@
 		</profile>
 
 		<profile>
-			<id>ruvdsgithub</id>
+			<id>githubruvds</id>
 			<build>
-				<directory>target-ruvdsgithub</directory>
+				<directory>target-githubruvds</directory>
 			</build>
 			<properties>
-				<profileActive>ruvdsgithub</profileActive>
+				<profileActive>githubruvds</profileActive>
 			</properties>
 		</profile>
 	</profiles>
