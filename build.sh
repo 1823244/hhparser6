@@ -1,2 +1,2 @@
 #!/bin/sh
-mvn -Dmaven.test.skip=true -Pgithubruvds clean package
+mvnw -Dmaven.test.skip=true -Pgithubruvds clean package
